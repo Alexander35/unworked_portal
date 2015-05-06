@@ -1,0 +1,74 @@
+\section{Setup}
+
+\subsection{Prerequisites}
+To run N2O websites you need to install Erlang R17 or higher.
+N2O works on Windows, Mac and Linux.
+
+\subsection{Kickstart Bootstrap}
+To try N2O you only need to fetch it from Github and build. We don't use
+fancy scripts, so building process is OTP compatible: bootstrap site
+is bundled as an Erlang release.
+
+\vspace{1\baselineskip}
+\begin{lstlisting}
+    $ git clone git://github.com/5HT/n2o
+    $ cd n2o/samples
+    $ ./mad deps compile plan repl
+\end{lstlisting}
+\vspace{1\baselineskip}
+
+Now you can try: \footahref{http://localhost:8000}{http://localhost:8000}.
+
+On Linux you should do at first:
+
+\begin{lstlisting}
+    $ sudo apt-get install inotify-tools
+\end{lstlisting}
+
+\newpage
+\subsection{Manual Setup}
+If you want to start using N2O inside your application, you can use Cowboy dispatch parameter
+for passing HTTP, REST, WebSocket and Static N2O endpoints:
+
+\begin{lstlisting}[caption=web\_sup.erl]
+    cowboy:start_http(http, 100,
+         [{port, wf:config(n2o,port)}],
+         [{env, [{dispatch, dispatch_rules()}]}]),
+
+    mime() -> [{mimetypes,cow_mimetypes,all}].
+
+    dispatch_rules() ->
+      cowboy_router:compile(
+        [{'_', [
+      {"/css/[...]", n2o_dynalo, {dir, "apps/hello/priv", mime()}},
+      {"/n2o/[...]", n2o_dynalo, {dir, "deps/n2o/priv", mime()}},
+      {"/rest/:resource", rest_cowboy, []},
+      {"/rest/:resource/:id", rest_cowboy, []},
+      {"/ws/[...]", bullet_handler, [{handler, n2o_bullet}]},
+      {'_', n2o_cowboy, []}
+        ]}]).
+\end{lstlisting}
+
+N2O uses two ports for SSL and non-SSL connections:
+
+\begin{lstlisting}
+    wf:config(n2o,port,443)
+\end{lstlisting}
+
+You can also redefine these ports in bullet connection inside template:
+
+\begin{lstlisting}
+    <script>
+        var transition = {pid: '', host: 'localhost', port: '443' };
+    </script>
+\end{lstlisting}
+
+And then add a minimal {\bf index.erl} page:
+
+\begin{lstlisting}[caption=index.erl]
+    -module(index).
+    -compile(export_all).
+    -include_lib("n2o/include/wf.hrl").
+
+    main() -> #span{body="Hello"}.
+\end{lstlisting}
