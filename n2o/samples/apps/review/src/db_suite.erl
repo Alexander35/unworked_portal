@@ -68,7 +68,36 @@ add_port_str(ID, Desc, Comm)->
 	add_into(#port_desc_string{target_port=ID, desc_string=Desc, comment=Comm}).
 
 get_port_str(ID)->
-	get_from(port_desc_string,ID).	
+	get_from(port_desc_string,ID).
+
+insert_mark(ID,Mark,Comm,DTT,TTT,DMT,TMT,UserID)->
+        insert_mark(ID,"hold string",Mark,Comm,DTT,TTT,DMT,TMT,UserID).
+
+insert_mark(ID,Str,Mark,Comm,DTT,TTT,DMT,TMT,UserID)->
+	case db_suite:get_from(cross_mark,ID) of
+                [] ->
+                        NewMark = [Mark++"::"];
+                [{cross_mark,_,Old_Mark,_}] ->
+                         case Old_Mark of
+				[A] ->
+					NewMark = [Mark++"::",A];
+				[A,B]->
+					NewMark = [Mark++"::",A,B];
+                                [A,B,C] ->
+                                        NewMark = [Mark++"::",A,B];
+                                _Els ->
+					io:format(" ~p ",[Old_Mark]),
+                                        NewMark = [Mark++"::",Old_Mark]
+                        end
+        end,
+	case Str of
+		"hold string"->
+			do_nothing;
+		_els->
+			db_suite:add_port_str(ID,Str,Comm)
+	end,           
+        db_suite:add_action(ID,[{test,DTT,TTT},{mark,DMT,TMT}],UserID),
+        db_suite:add_mark(ID, NewMark, Comm).
 
 add_mark(ID, Mark, Comm) ->
 	add_into(#cross_mark{target_port=ID, mark=Mark, comment=Comm}).
@@ -96,7 +125,7 @@ get_cross(Target) ->
         end,
         mnesia:activity(transaction, F).
 
-add_row(Name, Pass, Comment) ->
+add_account(Name, Pass, Comment) ->
 	F = fun() ->
 		mnesia:write(#account{name=Name, pass=Pass, comment=Comment})
 	end,

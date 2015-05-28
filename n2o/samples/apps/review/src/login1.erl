@@ -23,7 +23,7 @@ body() ->
                                 ]},
 				#tr{cells=[
 					#td{body= " "},
-                                        #td{body= #button{body=">>>",postback=login,source=[user,pass]} }
+                                        #td{body= #button{body=">>>",postback=login,source=[user,pass],autofocus=true} }
                                 ]}
 			]]
 		} 
@@ -38,12 +38,13 @@ init_user(User,Pass)->
     end.
 
 event(login) ->
-	case db_suite:key_test(wf:q(user), wf:q(pass)) of
-	{ok, Name, _Comment} -> 
-			       wf:user(Name),
-			       wf:redirect("find_port_via_mac");
-	_ ->
-			       wf:update(conn_status, #panel{id=conn_status, body=["Error: user/pass not found! please try again"]})
-    end;
+	%%case db_suite:key_test(wf:q(user), wf:q(pass)) of
+	%%{ok, Name, _Comment} -> 
+	%%		       wf:user(Name),
+	%%		       wf:redirect("find_port_via_mac");
+	%%_ ->
+	%%		       wf:update(conn_status, #panel{id=conn_status, body=["Error: user/pass not found! please try again"]})
+    %%end;
+	init_user(wf:q(user),wf:q(pass));
 
 event(_) -> [].

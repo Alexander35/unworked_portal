@@ -22,7 +22,7 @@ body() ->
 	 				#td{colspan=4,body =#span{body= "User : "++wf:user()}}
 				]},
 				#tr{cells=[
-					#td{body=#panel{id=label1, body = <<"Traget list : ">>}}, 
+					#td{body=#panel{id=label1, body = <<"Target list : ">>}}, 
 					#td{body=#panel{id=search_list, body = << "[List is empty]" >>  }},
 					#td{body=#button{
                                                 id=connect,
@@ -46,7 +46,7 @@ body() ->
                                         }},
 					#td{body=#button{
                                                 id=find_up_port,
-                                                body="find UP port",
+                                                body="JUMP",
                                                 postback=finding_up_port,
                                                 source=[ip,mark,mark_id]
                                         }}
@@ -85,7 +85,12 @@ body() ->
 					#td{colspan=4,body=#panel{id=telnet_out,  body=["telnet_out_here"]}}
 				]},
 				#tr{cells=[
-					#td{colspan=4,body=#panel{id=new_content, body=["body"]}}
+					#td{colspan=3,body=#panel{id=new_content, body=["last update view"]}},
+					#td{body=#button{
+                                                id=wrong_mark,
+                                                body="wrong mark?",
+                                                postback=wrong
+                                        }}
 				]},
 				#tr{cells=[
 					#td{colspan=4,body=#panel{id=db_out,  body=["cross-connect table"]}}
@@ -116,20 +121,29 @@ listener(ID)->
 			wf:update(status_bar, #panel{id=status_bar, body= "Connection lost. Try to reconnect" }),
                         wf:flush(ID);
 		
-		{update_cross_table}->
-			%%read_cross(),
-			%%wf:flush(ID),
-                        listener(ID);
+		{update_cross_table,UserID}->
+			%%io:format("~p ", [UserID]),
+			{L,La}=read_cross(UserID),
+			%%io:format("~p ~p ~p", [UserID, L, La]),
+			wf:update(new_content, #panel{id=new_content, body=[#p{body= La }]}),
+        		wf:update(db_out, #panel{id=db_out, body=[#p{body= L }]}),
+			wf:flush(list_to_atom(UserID)),
+                        listener(list_to_atom(UserID));
 		
 		_Other ->
 			some_other
 	end.
 read_cross()->
-	read_cross(wf:session(conn_list),[],[]).
+	read_cross(wf:user()).
+read_cross(UserID)->
+	case db_suite:get_from(account,UserID) of
+		 [{account,_,_,[Conn_List|[_|_]]}] ->
+				%%io:format(" ~p ",[Conn_List]),
+                                read_cross(Conn_List,[],[]);
+                 _els -> do_nothing
+	end.
 read_cross([],L,La)->
-	wf:update(new_content, #panel{id=new_content, body=[#p{body= La }]}),
-	wf:update(db_out, #panel{id=db_out, body=[#p{body= L }]}),
-        wf:flush(list_to_atom(wf:user()));
+	{L,La};
 
 read_cross([TargetTuple|Rest],L,La)->
 	{Target,_,_,_}=TargetTuple,
@@ -138,8 +152,10 @@ read_cross([TargetTuple|Rest],L,La)->
 	read_cross(Rest,[L1|L],[La1|La]).
 
 read_cross(Target,[],List,Last)->
-	{["<table border=1 style=width:100%><tr><td>Port ID</td><td>Port Desc</td><td>Mark</td><td>MAC</td><td>Test time</td><td>Mark time</td><td>User</td><td>Comment</td></tr>"|List],
-	 ["<table border=1 style=width:100%><tr><td colspan=8>Last in "++Target++" </tr><tr><td>Port ID</td><td>Port Desc</td><td>Mark</td><td>MAC</td><td>Test time</td><td>Mark time</td><td>User</td><td>Comment</td></tr>"|Last]};
+	{["<table border=1 style=width:100%><tr><td>Port ID</td><td>Port Desc</td><td>Mark</td><td>MAC</td>
+		<td>Test time</td><td>Mark time</td><td>User</td><td>Comment</td></tr>"|List],
+	 ["<table border=1 style=width:100%><tr><td colspan=8>Last in "++Target++" </tr><tr><td>Port ID</td><td>Port Desc</td>
+		<td>Mark</td><td>MAC</td><td>Test time</td><td>Mark time</td><td>User</td><td>Comment</td></tr>"|Last]};
 
 read_cross(Target,[Port|Ports],List,Last)->
 	case db_suite:get_from(cross_actions,Target++":"++Port) of
@@ -150,48 +166,63 @@ read_cross(Target,[Port|Ports],List,Last)->
 			[{cross_mark,_,Mark,Comment}]=db_suite:get_from(cross_mark,ID),
 			case db_suite:get_from(cross_mac,ID) of
 				[] -> 
-					Mac="no mac";
+					Mac="not marked with mac";
 				[{cross_mac,_,Mac,_}] ->
 					ok;
 				_Els -> 
-					Mac="unk mac"
-					
+					Mac="unk mac!"
 			end,
-						String="<tr><td>"++ID++"</td><td>"++lists:concat(Desc_Str)++"</td><td>"++Mark++"</td><td>"++Mac++"</td><td>"
-                                                        ++integer_to_list(Dt)++"."++integer_to_list(Mt)++"."++integer_to_list(Yt)++"  "
-							++integer_to_list(Ht)++":"++integer_to_list(Mit)++":"++integer_to_list(St)++"</td><td>"
-							++integer_to_list(Dm)++"."++integer_to_list(Mm)++"."++integer_to_list(Ym)++"  "
-                                                        ++integer_to_list(Hm)++":"++integer_to_list(Mim)++":"++integer_to_list(Sm)++"</td><td>"++
-							UserID++"</td><td>"++
-						case is_atom(Comment) of
-							true ->	atom_to_list(Comment);
-							false -> Comment
-						end ++
-							"</td></tr>",
-						case {date(),time()} of
-							{{Ym,Mm,Dm},{Hm,Mim,_}}->
-								Last1=[String|Last];
-							_Else ->
-								Last1=Last
-						end;
+			String="<tr><td>"++ID++"</td><td>"
+			++lists:concat(Desc_Str)++"</td><td>"++lists:concat(Mark)++"</td><td>"++Mac++"</td><td>"
+                                                        
+			++integer_to_list(Dt)++"."++integer_to_list(Mt)++"."++integer_to_list(Yt)++"  "
+			++integer_to_list(Ht)++":"++integer_to_list(Mit)++":"++integer_to_list(St)++"</td><td>"
+			++integer_to_list(Dm)++"."++integer_to_list(Mm)++"."++integer_to_list(Ym)++"  "
+                        ++integer_to_list(Hm)++":"++integer_to_list(Mim)++":"++integer_to_list(Sm)++"</td><td>"
+			++UserID++"</td><td>"++
+			
+			case is_atom(Comment) of
+				true ->	atom_to_list(Comment);
+				false -> Comment
+			end ++
+			"</td></tr>",
+			case {date(),time()} of
+			{{Ym,Mm,Dm},{Hm,Mim,_}}->
+				Last1=[String|Last],
+				case {db_suite:get_from(account,UserID), Comment} of
+                			{_, "Wrong"} ->
+							 do_nothing;
+					{[{account,_,Pass,[Conn_List,Wrong_List]}], _} ->
+                                                         db_suite:add_account(UserID,Pass,[Conn_List,[ID|Wrong_List]]);
+                 			_els ->
+						do_nothing
+        			end;
+				_Else ->
+					Last1=Last
+			end;
 		[] 	-> 
-						String="<tr><td>"++Target++":"++Port++"</td><td colspan=7>[NONE]</td></tr>",
-						Last1=Last;
+				String="<tr><td>"++Target++":"++Port++"</td><td colspan=7>[NONE]</td></tr>",
+				Last1=Last;
 		_Else 	-> 
-						String="<tr><td>"++Target++":"++Port++"</td><td colspan=7>[Read Error!]</td></tr>",
-						Last1=Last
+				String="<tr><td>"++Target++":"++Port++"</td><td colspan=7>[Read Error!]</td></tr>",
+				Last1=Last
 	end,
 	read_cross(Target,Ports,[String|List],Last1).
 
 %% creates connection list
 connection_list([]) ->
+		case db_suite:get_from(account,wf:user()) of 
+			[{account,_,Pass,_}] ->
+				db_suite:add_account(wf:user(),Pass,[wf:session(conn_list),[wrong_list]]);
+			_els -> do_nothing 
+		end,
 		wf:update(search_list, #panel{id=search_list, body= [["<br>"|TargetList] || {TargetList,_,_,_} <- wf:session(conn_list)] }),
-		wf:flush(list_to_atom(wf:user()));
+                wf:flush(list_to_atom(wf:user()));
 
 connection_list([H|Rest]) ->
 	Pid = spawn(telnet_client,manager,[]),%%spawn listener and manager processes
 	PidL = spawn(?MODULE,listener,[list_to_atom(wf:user())]),
-	Pid ! {self(),PidL,conn_login,H}, %% send conn_login to manager 
+	Pid ! {self(),PidL,conn_login,H,wf:user()}, %% send conn_login to manager 
 	
 	receive
 		{From,Pidl,socket,Socket,Target}->
@@ -219,9 +250,48 @@ find_port([H|Rest],Find,Mark)->
 	Pid ! {PidL, Socket, sh_mac, "show mac-a | inc "++Find++"\n", Ip, Mark,wf:user()},
 	find_port(Rest,Find,Mark).
 
+find_wrong([])->
+	ok;
+
+find_wrong([CurrID|List])->
+	case db_suite:get_from(cross_mark,CurrID) of
+                [] ->
+                        do_nothing;
+		[{cross_mark,_,_,"Wrong"}] ->
+			do_nothing;
+                [{cross_mark,_,Old_Mark,_}] ->
+                        case Old_Mark of
+                                [_,B,C] -> 
+                                        NewMark = [B,C];
+                                [_|B] ->
+                                        NewMark = [B]
+                        end,
+			%db_suite:insert_mark(CurrID,["this item marked WRONG without request to switch"],
+			%%	NewMark,"Wrong",date(),time(),date(),time(),wf:user());
+			db_suite:add_action(CurrID,[{test,date(),time()},{mark,date(),time()}],wf:user()),
+        		db_suite:add_mark(CurrID, NewMark, "Wrong");
+		Else -> 
+			io:format("elsewrong ~p",[Else])
+        end,
+	find_wrong(List).
+
 %%event handlers
 event(init) ->
 	wf:reg(list_to_atom(wf:user()));
+
+event(wrong) ->
+	case db_suite:get_from(account,wf:user()) of
+        	[{account,_,Pass,[Conn_List,Wrong_List]}] ->
+			%%io:format("finding for ~p ",[Wrong_List]),
+                	find_wrong(Wrong_List),
+			db_suite:add_account(wf:user(),Pass,[Conn_List,[wrong_list]]),
+			{L,La}=read_cross(wf:user()),
+                        wf:update(new_content, #panel{id=new_content, body=[#p{body= La }]}),
+                        wf:update(db_out, #panel{id=db_out, body=[#p{body= L }]}),
+                        wf:flush(list_to_atom(wf:user()));
+                _els -> 
+			do_nothing
+        end;
 
 event(logout) ->
 	case wf:session(conn_list) of
@@ -232,13 +302,18 @@ event(logout) ->
                 _Else ->
                         [ {From ! {stop, Sock}, Pidl ! {stop}} || {_,From,Pidl,Sock} <- wf:session(conn_list)],
                         wf:session(conn_list,[])
-                        %%connection_list(wf:session(ipl))
         end;
 
 event(get_next_mark) ->
 	wf:update(mark, #textbox{id=mark, value = db_suite:next_mark([".",".",".",".","."],wf:q(mark))});
 
 event(connect) ->
+	case db_suite:get_from(account,wf:user()) of
+                [{account,_,Pass,_}] ->
+                        db_suite:add_account(wf:user(),Pass,[conn_list,[wrong_list]]);
+                _els -> do_nothing
+        end,
+
 	case wf:session(conn_list) of
 		undefined ->
 			ok;
@@ -247,50 +322,60 @@ event(connect) ->
                 _Else -> 
 			[ {From ! {stop, Sock}, Pidl ! {stop}} || {_,From,Pidl,Sock} <- wf:session(conn_list)],
 			wf:session(conn_list,[])
-			%%connection_list(wf:session(ipl))
 	end,
 	connection_list(wf:session(ipl)),
-	find_port(wf:session(conn_list),"CA-01-15-90-00-08","Link?"),%%"The Truth Is Out There"
-	read_cross();
+	find_up_port(wf:session(conn_list),"just_connected"),
+	find_port(wf:session(conn_list),"CA-01-15-90-00-08","Link?");%%"The Truth Is Out There"
 
 event(finding_up_port) ->
+	case db_suite:get_from(account,wf:user()) of
+                [{account,_,Pass,[Conn_List|_]}] ->
+                        db_suite:add_account(wf:user(),Pass,[Conn_List,[wrong_list]]);
+                _els -> do_nothing
+        end,
+
         wf:update(mark_id, #textbox{id=mark_id, value = "Current_ID" }),
         case db_suite:get_from(cross_actions,wf:q(mark_id)) of
                 [] ->
-			find_up_port(wf:session(conn_list),wf:q(mark)),
-                        timer:sleep(3000);
+			find_up_port(wf:session(conn_list),wf:q(mark));
 		
 		[{cross_actions,ID,[_,{mark,{Y,M,D},{_,_,_}}],_}]->
                         case date() of
                                 {Y,M,D} ->
-                                        %%db_suite:add_port_str(ID,Str,no_comm),
-                                        db_suite:add_action(ID,[{test,{Y,M,D},time()},{mark,{Y,M,D},time()}],wf:user()),
-                                        db_suite:add_mark(ID, wf:q(mark), "Manually");
+					db_suite:insert_mark(ID,wf:q(mark),"Manually",{Y,M,D},time(),{Y,M,D},time(),wf:user()),
+					{L,La}=read_cross(wf:user()),
+                                        wf:update(new_content, #panel{id=new_content, body=[#p{body= La }]}),
+                                        wf:update(db_out, #panel{id=db_out, body=[#p{body= L }]}),
+                                        wf:flush(list_to_atom(wf:user()));
+
                                 _Else -> ok
                         end;
                 _Els -> ok
-        end,
-        read_cross();
-
-
+        end;
 
 event(finding) ->
+	case db_suite:get_from(account,wf:user()) of
+                [{account,_,Pass,[Conn_List|_]}] ->
+                        db_suite:add_account(wf:user(),Pass,[Conn_List,[wrong_list]]);
+                _els -> do_nothing
+        end,
 	wf:update(mark_id, #textbox{id=mark_id, value = "Current_ID" }),
 	case db_suite:get_from(cross_actions,wf:q(mark_id)) of
 		[] ->
-			find_port(wf:session(conn_list),wf:q(mac),wf:q(mark)),
-                        timer:sleep(3000);
+			find_port(wf:session(conn_list),wf:q(mac),wf:q(mark));
 
 		[{cross_actions,ID,[_,{mark,{Y,M,D},{_,_,_}}],_}] -> 
 			case date() of
 				{Y,M,D} ->
-					db_suite:add_action(ID,[{test,{Y,M,D},time()},{mark,{Y,M,D},time()}],wf:user()),
-                                        db_suite:add_mark(ID, wf:q(mark), "Manually");
+					db_suite:insert_mark(ID,wf:q(mark),"Manually",{Y,M,D},time(),{Y,M,D},time(),wf:user()),
+					{L,La}=read_cross(wf:user()),
+					wf:update(new_content, #panel{id=new_content, body=[#p{body= La }]}),
+					wf:update(db_out, #panel{id=db_out, body=[#p{body= L }]}),
+					wf:flush(list_to_atom(wf:user()));
 				_Else -> ok
 			end;
 		_Els -> ok
-	end,
-	read_cross();
+	end;
 
 %%don't forget optimizing this =)
 event(add_ip) ->
