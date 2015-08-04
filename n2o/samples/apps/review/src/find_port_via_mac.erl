@@ -1,103 +1,186 @@
 -module(find_port_via_mac).
 -compile(export_all).
--include_lib("kvs/include/entry.hrl").
+%%-include_lib("kvs/include/entry.hrl").
 -include_lib("n2o/include/wf.hrl").
 
 main() ->
 	case wf:user() /= undefined of %%user recognize  
-    		true  -> 			 
+    		true  -> 
+			 [{delegate,_, User_role}] = db_suite:get_from(delegate,wf:user()),
+			 [U|_]=User_role,
+			 wf:session(user_role,U),
+			 io:format("~p",[wf:session(user_role)]),			 
 			 #dtl{
 				file = "find_port_via_mac",
 			      	app=review,
-			      	bindings=[{title,<<"FIND_PORT_VIA_MAC">>},{body,body()}]
+			      	bindings=[{title,<<"модуль сверки | ИОН"/utf8>>},{body,locker(body(),[],wf:session(user_role))}]
 			     }; %%rendering page
     		false -> wf:redirect("login1")
 	end.
 
+
+rights_list_up([],_)->
+	io:format("~p",["OK"]),
+	ok;
+
+rights_list_up([{User_Role,block}|_],User_Role)->
+	io:format("[~p]",[{User_Role,block}]),
+	block;
+
+rights_list_up([H|Rest],User_Role)->
+	io:format("'' ~p ''",[{H,User_Role}]),
+	rights_list_up(Rest,User_Role).
+
+locker([],Answer,User_Role)->
+	Answer;
+
+locker([{Item,ID}|Ist],Answer,User_Role)->
+	io:format("99~p99",[User_Role]),
+	case db_suite:get_from(element,ID) of
+		[{element,_,Right_list,_}]->
+			case rights_list_up(Right_list,User_Role) of
+                		ok   ->
+					io:format("ID:  ~p",[ID]),
+					Answer1= [Answer,Item];
+					%%locker(Ist,[Answer,Item],User_Role);
+                		_ ->
+					Answer1= Answer,
+					io:format("~p",[banana])
+        		end;
+		[] ->	
+			Answer1= [Answer,Item];
+			%%locker(Ist,[Answer,Item],User_Role);
+		Els  -> 
+			Answer1=Answer,
+			io:format("~p ~p",[Els, {ID}]),do_nothing 
+	end,
+	locker(Ist,Answer1,User_Role);
+
+locker([L|Ist],Answer,User_Role)->
+	locker(Ist,[Answer,L],User_Role).
+
 body() ->
-	[
-		#table{style="width:100%",class=[table,"table-hover"],
-			body=[[
-				#tr{cells=[
-	 				#td{colspan=4,body =#span{body= "User : "++wf:user()}}
-				]},
-				#tr{cells=[
-					#td{body=#panel{id=label1, body = <<"Target list : ">>}}, 
-					#td{body=#panel{id=search_list, body = << "[List is empty]" >>  }},
-					#td{body=#button{
-                                                id=connect,
-                                                body="connect",
-                                                postback=connect
-                                        }},
-					#td{body=#button{
-                                                id=logout,
-                                                body="logout",
-                                                postback=logout
-                                        }}
-				]},
-				#tr{cells=[
-					#td{body=#panel{id=label2, body = <<"MAC address: ">>}},
-					#td{body=#textbox{id=mac, value = <<"00-00-DB-00-00-DB">>, autofocus=true}},
-					#td{body=#button{
-                                                id=find,
-                                                body="find MAC",
-                                                postback=finding,
-                                                source=[mac,ip,mark,mark_id]
-                                        }},
-					#td{body=#button{
-                                                id=find_up_port,
-                                                body="JUMP",
-                                                postback=finding_up_port,
-                                                source=[ip,mark,mark_id]
-                                        }}
-      	 	      		]},
-				#tr{cells=[ 
-					#td{body=#panel{id=label3, body = <<"Target IP: ">>}}, 
-					#td{body=#textbox{id=ip_list, value = <<"192.168.20.44">>}},
-					#td{body=#button{
-                                                id=add_ip,
-                                                body="add IP",
-                                                postback=add_ip,
-                                                source=[ip_list]
-                                        }},
-                                        #td{body=#button{
-                                                id=del_ip,
-                                                body="del IP",
-                                                postback=del_ip,
-                                                source=[ip_list]
-                                        }}					
-				]},
-				#tr{cells=[
-					#td{body=#panel{id=label3, body= <<"Marker">>}},
-					#td{body=#textbox{id=mark_id, value = <<"Current_ID">>}},
-					#td{body=#textbox{id=mark, value = <<"1-1-1(1-2)">>}},
-					#td{body=#button{
-                        			id=next_mark,
-                        			body="o-0-0(O-o)",
-                        			postback=get_next_mark,
-                        			source=[mark]
-                			}}
-				]},
-				#tr{cells=[
-					#td{colspan=4,body=#panel{id=status_bar,  body=["status:"]}}
-				]},
-				#tr{cells=[
-					#td{colspan=4,body=#panel{id=telnet_out,  body=["telnet_out_here"]}}
-				]},
-				#tr{cells=[
-					#td{colspan=3,body=#panel{id=new_content, body=["last update view"]}},
-					#td{body=#button{
-                                                id=wrong_mark,
-                                                body="wrong mark?",
-                                                postback=wrong
-                                        }}
-				]},
-				#tr{cells=[
-					#td{colspan=4,body=#panel{id=db_out,  body=["cross-connect table"]}}
-				]}
-			]]
-		}	
-    	].
+	[	
+		{#panel{ class= <<"row"/utf8>>, body=[
+                        #panel{class= <<"cols col-12full"/utf8>>, body=
+                                                               	#panel{id=new_content, body=["last update view"]}
+                                                                }
+                ]},new_content},
+		{
+                #panel{ class= <<"row"/utf8>>, body=[
+			
+                        #panel{id=label1, class= <<"cols col-6resize"/utf8>>, body= [
+                                                                <<"Список IP адресов : "/utf8>>,
+                                                                #panel{id=search_list, body =
+                                                                <<"[Список сейчас пуст]"/utf8 >>}
+                                                                ]},
+                        #panel{class= <<"cols col-6resize"/utf8>>, body=
+                                                                #panel{id=status_bar, body=[ <<"Текущее состояние:"/utf8>> ]}
+                                                                }
+                ]},list_of_add_and_status},
+		{
+		#panel{ class= <<"row"/utf8>>, body= [
+			#panel{id=label0, class= <<"cols col-3"/utf8>>, body= [ <<"Пользователь : <br>"/utf8>>] ++ wf:user()},
+			#panel{ class= <<"cols col-3"/utf8>>, body=
+                                                                #button{
+                                                                        id=connect,
+                                                                        body= <<"Подключить"/utf8>>,
+                                                                        postback=connect
+                                                                }},
+			#panel{class = <<"cols col-3"/utf8>>, body= [
+                                                                        <<"IP адрес <br>"/utf8>>,
+                                                                        #textbox{id=ip_list,value = <<"192.168.20.44">>}
+                                                                ]},
+			#panel{ class= <<"cols col-3"/utf8>>, body=
+                                                                #button{
+                                                                        id=logout,
+                                                                        body= <<"Выход"/utf8>>,
+                                                                        postback=logout
+                                                               }}
+
+		]},user_conn_ip_logout},
+		{
+		#panel{ class= <<"row"/utf8>>, body= [
+			#panel{class = <<"cols col-6"/utf8>>, body= 
+								#button{
+                                                                        id=add_ip,
+                                                                        body= <<"Доб. IP адрес"/utf8>>,
+                                                                        postback=add_ip,
+                                                                        source=[ip_list]
+                                                                }},
+			#panel{class = <<"cols col-6"/utf8>>, body=
+								#button{
+                                               				id=del_ip,
+                                                			body= <<"Удалить IP адрес"/utf8>>,
+                                                			postback=del_ip,
+                                                			source=[ip_list]
+                                        			}}
+		]},add_ip_del_ip },
+		{
+		#panel{ class= <<"row"/utf8>>, body=[
+			#panel{ class= <<"cols col-6"/utf8>>, body= [
+								#panel{id=label2, body = <<"MAC адрес устройства: <br>"/utf8>>},
+								#textbox{id=mac, value = <<"00-00-DB-00-00-DB">>}
+								]},
+                	#panel{ class= <<"cols col-6"/utf8>>, body=
+								#button{
+                                                			id=find,
+                                                			body= <<"Поиск MAC адреса"/utf8>>,
+                                                			postback=finding,
+                                                			source=[mac,ip,mark,mark_id]
+                                        			}}
+		]},find_mac},
+		{
+		#panel{ class= <<"row"/utf8>>, body=[
+                	#panel{ class= <<"cols col-12full"/utf8>>, body=
+								#button{
+                                                			id=find_up_port,
+                                                			body= <<"Поиск изменений в описании"/utf8>>,
+                                                			postback=finding_up_port,
+                                                			source=[ip,mark,mark_id]
+                                        			}}
+		]},change_find},
+		{
+		#panel{ class= <<"row"/utf8>>, body= locker([
+			
+			{#panel{ class= <<"cols col-3"/utf8>>, body= [
+                                                                <<"Изменить Маркер<br>"/utf8>>,
+                                                                #textbox{id=mark_id, value = <<"Текущий ID порта"/utf8>>}
+                                                                ]},change_mark},
+			{
+			#panel{ class= <<"cols col-3"/utf8>>, body= [
+								<<"Маркер<br>"/utf8>>,
+								#textbox{id=mark, value = <<"1-1-1(1-2)">>}
+								]},marker},
+			{
+			#panel{ class= <<"cols col-3"/utf8>>, body=
+								[
+								<<"Следующий <br>"/utf8>>,
+								#button{
+                                                			id=next_mark,
+                                               				body= "o-0-0(O-o)" ,
+                                                			postback=get_next_mark,
+                                                			source=[mark]
+                                        				}
+								]
+								},next_marker},
+			{
+			#panel{class= <<"cols col-3"/utf8>>, body=
+                                                                #button{
+                                                                        id=wrong_mark,
+                                                                        body= <<"Удалить текущий маркер"/utf8>>,
+                                                                        postback=wrong
+                                                                }},del_marker}
+
+		],[],wf:session(user_role))},marker},
+		{
+		#panel{ class= <<"row"/utf8>>, body=[
+			#panel{class= <<"cols col-12full"/utf8>>, body=
+                                        			#panel{id=db_out,  body=["cross-connect table"]}
+								}
+		]},cross_table}	
+	].
+
 listener(ID)->
 	receive
 		{status_out, Cmd} ->
@@ -148,66 +231,122 @@ read_cross([],L,La)->
 read_cross([TargetTuple|Rest],L,La)->
 	{Target,_,_,_}=TargetTuple,
 	[{listing,port_edge_core28,PortList,standard_switch_port}]=db_suite:get_from(listing, port_edge_core28),
-	{L1,La1}=read_cross(Target,PortList,["</table>"],[["</table>"]]),
+	{L1,La1}=read_cross(Target,PortList,[],[]),
 	read_cross(Rest,[L1|L],[La1|La]).
 
 read_cross(Target,[],List,Last)->
-	{["<table border=1 style=width:100%><tr><td>Port ID</td><td>Port Desc</td><td>Mark</td><td>MAC</td>
-		<td>Test time</td><td>Mark time</td><td>User</td><td>Comment</td></tr>"|List],
-	 ["<table border=1 style=width:100%><tr><td colspan=8>Last in "++Target++" </tr><tr><td>Port ID</td><td>Port Desc</td>
-		<td>Mark</td><td>MAC</td><td>Test time</td><td>Mark time</td><td>User</td><td>Comment</td></tr>"|Last]};
+        {[<<"<div class= row>
+				<div class= 'cols col-1asis' >
+					ID Порта
+				</div>
+				<div class= 'cols col-2asis' >
+                                        Описание
+                                </div>
+				<div class= 'cols col-2asis'>
+                                        Маркер
+                                </div>
+				<div class= 'cols col-2asis'>
+                                        MAC-Адрес
+                                </div>
+				<div class= 'cols col-1asis'>
+                                        Последний Доступ
+                                </div>
+				<div class= 'cols col-1asis'>
+                                        Время Установки Маркера
+                                </div>
+				<div class= 'cols col-1asis'>
+                                        Пользователь
+                                </div>
+				<div class= 'cols col-1asis'>
+                                        Комментарий
+                                </div>
+
+	</div>"/utf8>>|List
+	],[
+	<<"<div class= row> <div class = 'cols col-12full'> последние изменения в"/utf8>>]++Target++[<<" </div><div/>
+	<div class= row> 
+                                <div class= 'cols col-1asis' >
+                                        ID Порта
+                                </div>
+                                <div class= 'cols col-2asis' >
+                                        Описание
+                                </div>
+                                <div class= 'cols col-2asis'>
+                                        Маркер
+                                </div>
+                                <div class= 'cols col-2asis'>
+                                        MAC-Адрес
+                                </div>
+                                <div class= 'cols col-1asis'>
+                                        Последний Доступ
+                                </div>
+                                <div class= 'cols col-1asis'>
+                                        Время Установки Маркера
+                                </div>
+                                <div class= 'cols col-1asis'>
+                                        Пользователь
+                                </div>
+                                <div class= 'cols col-1asis'>
+                                        Комментарий
+                                </div>
+
+        </div>"/utf8>>|Last
+
+		]};
 
 read_cross(Target,[Port|Ports],List,Last)->
-	case db_suite:get_from(cross_actions,Target++":"++Port) of
-		[{cross_actions,ID,
+        case db_suite:get_from(cross_actions,Target++":"++Port) of
+                [{cross_actions,ID,
                 [{test,{Yt,Mt,Dt},{Ht,Mit,St}},{mark,{Ym,Mm,Dm},{Hm,Mim,Sm}}],
                 UserID}] ->
-			[{port_desc_string,_,Desc_Str,_}]=db_suite:get_from(port_desc_string,ID),
-			[{cross_mark,_,Mark,Comment}]=db_suite:get_from(cross_mark,ID),
-			case db_suite:get_from(cross_mac,ID) of
-				[] -> 
-					Mac="not marked with mac";
-				[{cross_mac,_,Mac,_}] ->
-					ok;
-				_Els -> 
-					Mac="unk mac!"
-			end,
-			String="<tr><td>"++ID++"</td><td>"
-			++lists:concat(Desc_Str)++"</td><td>"++lists:concat(Mark)++"</td><td>"++Mac++"</td><td>"
-                                                        
-			++integer_to_list(Dt)++"."++integer_to_list(Mt)++"."++integer_to_list(Yt)++"  "
-			++integer_to_list(Ht)++":"++integer_to_list(Mit)++":"++integer_to_list(St)++"</td><td>"
-			++integer_to_list(Dm)++"."++integer_to_list(Mm)++"."++integer_to_list(Ym)++"  "
-                        ++integer_to_list(Hm)++":"++integer_to_list(Mim)++":"++integer_to_list(Sm)++"</td><td>"
-			++UserID++"</td><td>"++
-			
-			case is_atom(Comment) of
-				true ->	atom_to_list(Comment);
-				false -> Comment
-			end ++
-			"</td></tr>",
-			case {date(),time()} of
-			{{Ym,Mm,Dm},{Hm,Mim,_}}->
-				Last1=[String|Last],
-				case {db_suite:get_from(account,UserID), Comment} of
-                			{_, "Wrong"} ->
-							 do_nothing;
-					{[{account,_,Pass,[Conn_List,Wrong_List]}], _} ->
+                        [{port_desc_string,_,Desc_Str,_}]=db_suite:get_from(port_desc_string,ID),
+                        [{cross_mark,_,Mark,Comment}]=db_suite:get_from(cross_mark,ID),
+                        case db_suite:get_from(cross_mac,ID) of
+                                [] ->
+                                        Mac="not marked with mac";
+                                [{cross_mac,_,Mac,_}] ->
+                                        ok;
+                                _Els ->
+                                        Mac="unk mac!"
+                        end,
+                        String="<div class=row><div class ='cols col-1asis'>"++ID++"</div><div class ='cols col-2asis'>"
+                        ++lists:concat(Desc_Str)++"</div><div class ='cols col-2asis'>"++lists:concat(Mark)++"</div><div class ='cols col-2asis'>"++Mac++"</div><div class ='cols col-1asis'>"
+
+                        ++integer_to_list(Dt)++"."++integer_to_list(Mt)++"."++integer_to_list(Yt)++"  "
+                        ++integer_to_list(Ht)++":"++integer_to_list(Mit)++":"++integer_to_list(St)++"</div><div class ='cols col-1asis'>"
+                        ++integer_to_list(Dm)++"."++integer_to_list(Mm)++"."++integer_to_list(Ym)++"  "
+                        ++integer_to_list(Hm)++":"++integer_to_list(Mim)++":"++integer_to_list(Sm)++"</div><div class ='cols col-1asis'>"
+                        ++UserID++"</div><div class ='cols col-1asis'>"++
+
+                        case is_atom(Comment) of
+                                true -> atom_to_list(Comment);
+                                false -> Comment
+                        end ++
+                        "</div></div>",
+                        case {date(),time()} of
+                        {{Ym,Mm,Dm},{Hm,Mim,_}}->
+                                Last1=[String|Last],
+                                case {db_suite:get_from(account,UserID), Comment} of
+                                        {_, "Wrong"} ->
+                                                         do_nothing;
+                                        {[{account,_,Pass,[Conn_List,Wrong_List]}], _} ->
                                                          db_suite:add_account(UserID,Pass,[Conn_List,[ID|Wrong_List]]);
-                 			_els ->
-						do_nothing
-        			end;
-				_Else ->
-					Last1=Last
-			end;
-		[] 	-> 
-				String="<tr><td>"++Target++":"++Port++"</td><td colspan=7>[NONE]</td></tr>",
-				Last1=Last;
-		_Else 	-> 
-				String="<tr><td>"++Target++":"++Port++"</td><td colspan=7>[Read Error!]</td></tr>",
-				Last1=Last
-	end,
-	read_cross(Target,Ports,[String|List],Last1).
+                                        _els ->
+                                                do_nothing
+                                end;
+                                _Else ->
+                                        Last1=Last
+                        end;
+                []      ->
+                                String="<div class=row><div class ='cols col-1asis'>"++Target++":"++Port++"<div/><div class ='cols col-7asis'>[NONE]</div></div>",
+                                Last1=Last;
+                _Else   ->
+                                String="<div class=row><div class ='cols col-1asis'>"++Target++":"++Port++"<div/><div class ='cols col-7asis'>[Read Error!]</div></div>",
+                                Last1=Last
+        end,
+        read_cross(Target,Ports,[String|List],Last1).
+
+
 
 %% creates connection list
 connection_list([]) ->
@@ -266,8 +405,6 @@ find_wrong([CurrID|List])->
                                 [_|B] ->
                                         NewMark = [B]
                         end,
-			%db_suite:insert_mark(CurrID,["this item marked WRONG without request to switch"],
-			%%	NewMark,"Wrong",date(),time(),date(),time(),wf:user());
 			db_suite:add_action(CurrID,[{test,date(),time()},{mark,date(),time()}],wf:user()),
         		db_suite:add_mark(CurrID, NewMark, "Wrong");
 		Else -> 
@@ -282,7 +419,6 @@ event(init) ->
 event(wrong) ->
 	case db_suite:get_from(account,wf:user()) of
         	[{account,_,Pass,[Conn_List,Wrong_List]}] ->
-			%%io:format("finding for ~p ",[Wrong_List]),
                 	find_wrong(Wrong_List),
 			db_suite:add_account(wf:user(),Pass,[Conn_List,[wrong_list]]),
 			{L,La}=read_cross(wf:user()),

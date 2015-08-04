@@ -123,7 +123,7 @@ make_port_brief_report_ins(ID,Str,UserID,Mark,Da,Ti)->
 		
 		{[{cross_actions,_,[{test,{Y,M,D},{H,Min,S}},{mark,{Ym,Mm,Dm},{Hm,Mim,Sm}}],User_m}] , [{port_desc_string,_,Desc_c,_}]} ->
 			case {Da,Ti, db_suite:get_from(cross_mark,ID)} of
-				{{Y,M,D},_,  [{cross_mark,_,_,jump}]} ->
+				{{Ym,Mm,Dm},_,  [{cross_mark,_,_,jump}]} ->
 					do_nothing;
 				{{Y,M,D},{H,Min1,S1},  [{cross_mark,_,_,_}]} -> 
 					T=(Min1*60+S1)-(Min*60+S),

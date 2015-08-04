@@ -2,19 +2,29 @@
 -compile(export_all).
 
 -record(account, {name, pass, comment}).
--record(port_desc_string, {target_port,desc_string, comment}).
--record(cross, {target_port,mark, work_date, desc, mac, comment}).
--record(cross_actions, {target_port,work_date, comment}).
--record(cross_mark, {target_port,mark, comment}).
--record(cross_mac,{target_port,mac,comment}).
+-record(port_desc_string, {target_port, desc_string, comment}).
+%%-record(cross, {target_port,mark, work_date, desc, mac, comment}).
+-record(cross_actions, {target_port, work_date, comment}).
+-record(cross_mark, {target_port, mark, comment}).
+-record(cross_mac, {target_port, mac, comment}).
+-record(element, {name, rights, comment}).
+-record(delegate, {name, role}).
 
-create_cross_tab() ->
-	mnesia:create_table(cross, [{attributes, record_info(fields, cross)}, {disc_copies, [node()]}]). 
+create_element_tab() ->
+      mnesia:create_table(element, [{attributes, record_info(fields, element)}, {disc_copies, [node()]}]).
+create_delegate_tab() ->
+      mnesia:create_table(delegate, [{attributes, record_info(fields, delegate)}, {disc_copies, [node()]}]).
+
+%%-record(item_content,{item_id,content,rights}).%% for storage module item content
+
+%%create_cross_tab() ->
+%%	mnesia:create_table(cross, [{attributes, record_info(fields, cross)}, {disc_copies, [node()]}]). 
 
 init_port_desc_string()->init(port_desc_string, record_info(fields, port_desc_string)).
 init_cross_actions()->init(cross_actions, record_info(fields, cross_actions)).
 init_cross_mark()->init(cross_mark, record_info(fields, cross_mark)).
 init_cross_mac()->init(cross_mac, record_info(fields, cross_mac)).
+%%init_item_content()->init(item_content,record_info(fields, item_content)).
 
 init(TabName,Fields)->
 	mnesia:create_table(TabName, [{attributes, Fields }, {disc_copies, [node()]}]).
@@ -70,6 +80,16 @@ add_port_str(ID, Desc, Comm)->
 get_port_str(ID)->
 	get_from(port_desc_string,ID).
 
+%%insert_item_content(ID, Content, Rights) ->
+%%        add_into(#item_content{item_id=ID,content=Content,rights=Rights}).
+
+insert_element(ID, Rights, Comment) ->
+        add_into(#element{name=ID,rights=Rights,comment=Comment}).
+
+insert_delegate(User, Role) ->
+        add_into(#delegate{name=User,role=Role}).
+
+
 insert_mark(ID,Mark,Comm,DTT,TTT,DMT,TMT,UserID)->
         insert_mark(ID,"hold string",Mark,Comm,DTT,TTT,DMT,TMT,UserID).
 
@@ -83,7 +103,7 @@ insert_mark(ID,Str,Mark,Comm,DTT,TTT,DMT,TMT,UserID)->
 					NewMark = [Mark++"::",A];
 				[A,B]->
 					NewMark = [Mark++"::",A,B];
-                                [A,B,C] ->
+                                [A,B,_] ->
                                         NewMark = [Mark++"::",A,B];
                                 _Els ->
 					io:format(" ~p ",[Old_Mark]),
@@ -105,19 +125,19 @@ add_mark(ID, Mark, Comm) ->
 add_action(ID, Work_date, Comm) ->
 	add_into(#cross_actions{target_port=ID, work_date=Work_date, comment=Comm}).
 
-add_cross(Work_time,Work_date,Mark,Desc,ID,Mac,Comment)->
-	{H,Min,S}=Work_time,
-        {Y,M,D}=Work_date,
-	add_into(#cross{target_port=ID,mark=Mark, work_date={Y,M,D,H,Min,S}, desc=Desc, mac=Mac, comment=Comment}).
+%%add_cross(Work_time,Work_date,Mark,Desc,ID,Mac,Comment)->
+%%	{H,Min,S}=Work_time,
+%%        {Y,M,D}=Work_date,
+%%	add_into(#cross{target_port=ID,mark=Mark, work_date={Y,M,D,H,Min,S}, desc=Desc, mac=Mac, comment=Comment}).
 
-add_cross(Work_time,Work_date,Mark,Desc,Target,Port,Mac,Comment)->
-	{H,Min,S}=Work_time,
-	{Y,M,D}=Work_date,
-	F = fun() ->
-                mnesia:write(#cross{target_port=Target++":"++Port,
-				 work_date={Y,M,D,H,Min,S}, mark=Mark, desc=Desc, mac=Mac, comment=Comment})
-        end,
-        mnesia:activity(transaction, F).
+%%add_cross(Work_time,Work_date,Mark,Desc,Target,Port,Mac,Comment)->
+%%	{H,Min,S}=Work_time,
+%%	{Y,M,D}=Work_date,
+%%	F = fun() ->
+%%                mnesia:write(#cross{target_port=Target++":"++Port,
+%%				 work_date={Y,M,D,H,Min,S}, mark=Mark, desc=Desc, mac=Mac, comment=Comment})
+%%        end,
+%%        mnesia:activity(transaction, F).
 
 get_cross(Target) ->
         F = fun() ->

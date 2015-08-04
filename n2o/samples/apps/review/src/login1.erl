@@ -4,29 +4,16 @@
 -include_lib("n2o/include/wf.hrl").
 
 main() ->
-	#dtl{file="login1",app=review,bindings=[{body,body()}]}.
+	#dtl{file="login1",app=review,bindings=[{title,<<"логин | ИОН"/utf8>>},{body,body()}]}.
 
 body() ->
 	[ 
-		#table{style="width:50%",class=[table,"table-hover"], 
-			body=[[
-				#tr{cells=[
-					#th{colspan = 2, body= #panel{id=conn_status, body=["Enter your Username and Password"]} }
-				]},
-				#tr{cells=[
-                                        #td{body= #span{body="Username: "} },
-                                        #td{body= #textbox{style="width:100%", id=user,autofocus=true} }
-                                ]},
-				#tr{cells=[
-                                        #td{body= #span{body="Password: "} },
-                                        #td{body= #input{style="width:100%", type=password,id=pass} }
-                                ]},
-				#tr{cells=[
-					#td{body= " "},
-                                        #td{body= #button{body=">>>",postback=login,source=[user,pass],autofocus=true} }
-                                ]}
-			]]
-		} 
+		
+		#panel{ class= <<"cols col-12full"/utf8>>, body=#panel{id=conn_status, body= <<"Введите логин и пароль"/utf8>> }},
+		#panel{ class= <<"cols col-6resize"/utf8>>, body= [<<"Пользователь: <br>"/utf8>>, #textbox{style="width:100%", id=user,autofocus=true}]},
+		#panel{ class= <<"cols col-6resize"/utf8>>, body= [<<"Пароль : <br>"/utf8>>, #input{style="width:100%", type=password,id=pass}]},
+		#panel{ class= <<"cols col-12full"/utf8>>, body=#button{body=">>>",postback=login,source=[user,pass],autofocus=true}}
+
 	].
 init_user(User,Pass)->
     case db_suite:key_test(User, Pass) of
@@ -34,7 +21,7 @@ init_user(User,Pass)->
                                wf:user(Name),
                                wf:redirect("find_port_via_mac");
         _ ->
-                               wf:update(conn_status, #panel{id=conn_status, body=["Error: user/pass not found! please try again"]})
+                               wf:update(conn_status, #panel{id=conn_status, body= <<"Логин и/или пароль не совпадают. Пожалуйста, попробуйте ещё раз"/utf8>> })
     end.
 
 event(login) ->
