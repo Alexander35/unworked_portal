@@ -15,7 +15,7 @@ manager()->
 							true ->
 								case  lists:last(Cmd) of
                                                    			"Username: " ->
-                                                              			ok = gen_tcp:send(Socket, "albiruni\nj642Trz\n"),
+                                                              			ok = gen_tcp:send(Socket, "login\passwd\n"),
                                        		                		An = fetch(Socket,[]),
                                        		                		decode(Socket, An),
 										ok = gen_tcp:send(Socket,
