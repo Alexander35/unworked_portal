@@ -18,9 +18,9 @@ manager()->
                                                               			ok = gen_tcp:send(Socket, "albiruni\nj642Trz\n"),
                                        		                		An = fetch(Socket,[]),
                                        		                		decode(Socket, An),
-										ok = gen_tcp:send(Socket,
-											"configure\nmac-address-table aging-time 10\nend\n"),
-										fetch(Socket,[]),
+										%%ok = gen_tcp:send(Socket,
+										%%	"configure\nmac-address-table aging-time 10\nend\n"),
+										%%fetch(Socket,[]),
 										PidL ! {status_out,"connected"},
 										From ! {self(),PidL,socket,Socket,Target};
 										%%PidL ! {update_cross_table,UserID};
@@ -70,6 +70,7 @@ manager()->
 				Desc -> 
 					make_report(Mark,lists:droplast(CC),Ip,Desc,UserID) 
 			 end,
+			 timer:sleep(3000),
 			 From ! {status_out,"find mac : done for "++Ip },
                          From ! {update_cross_table,UserID},
 			 %%From ! {status_out, "find mac : cross-table updated"},
@@ -79,6 +80,9 @@ manager()->
 			 From ! { status_out,"find up : request to switch "++Ip },
 			 ok = gen_tcp:send(Socket, "show interfaces brief\n"),
 			 An = fetch(Socket,[]),
+
+  			 %%io:format("~p",[An]),			
+
 			 [_|CC]=decode(Socket, An),
 			 case lists:last(CC) of
                                 "--- [Space] Next page, [Enter] Next line, [A] All, Others to exit ---" ->
@@ -193,7 +197,7 @@ make_report(Mark,[Str|Text],Target,Desc,UserID) ->
 	make_report(Mark,Text,Target,Desc,UserID).
 
 disconnect(Socket)->
-	ok = gen_tcp:send(Socket, "configure\nmac-address-table aging-time 300\n"),
+	%%ok = gen_tcp:send(Socket, "configure\nmac-address-table aging-time 300\n"),
 	ok = gen_tcp:send(Socket, "end\nexit\n"),
 	case gen_tcp:close(Socket) of
 		ok    ->  

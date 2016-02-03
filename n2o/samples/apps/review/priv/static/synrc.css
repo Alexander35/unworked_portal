@@ -10,8 +10,8 @@ textarea { padding: 10px; }
 input { font-size:28pt; width: 50%; margin:15px 15px 5px 5px; }
 button { font-size:20pt; margin-top:15px; padding: 10px; }
 H1 { color: blue; font-weight: bold; font-size:26pt; margin-top:20px; margin-bottom:10px; margin-right:6px; }
-H2 { color: darkblue; font-size:18pt; margin-top:20px; margin-bottom:10px; margin-right:6px; }
-H3 { font-size:14pt; margin-top:20px; margin-bottom:10px; margin-right:6px; } 
+H2 { color: black; font-size:30pt; margin-top:20px; margin-bottom:10px; margin-right:6px; }
+H3 { font-size:14pt; margin-top:2%; margin-bottom:10px; margin-right:6px; } 
 P { font-size:18pt; margin-top: 0px; margin-bottom: 8px; }
 P.poem { font-size:14pt; margin-top: 0px; margin-bottom: 8px; white-space: pre;}
 LI { font-size:12pt; }
@@ -26,6 +26,14 @@ pre { font-size:10pt; font-family: Calibri, Lucida Console; }
 .contents { width:270px;float:left; }
 .numbox { padding:10px 10px 10px 10px;background-color:black;color:white; }
 .feed { margin-top:20px; }
+.imageContainer {
+       font: 100/1.5em times new roman, Helvetica, serf;
+      width:1000px; 
+       height:800px;
+       text-align:center;
+       
+       background-image: url("happy_birthday_text.jpg");
+ }
 
 code, div.lstlisting { font-size:14pt; margin: 20px 20px 20px 0px;
                         padding: 0px 20px 20px 20px; font-family: monospace;

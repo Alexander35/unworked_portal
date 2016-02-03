@@ -12,7 +12,7 @@ body {
  	}
 
 .container {
- 	width: 90%;
+ 	width: 100%;
  	margin: 0 auto;
  	background: #4B0082;
  	}
@@ -28,6 +28,44 @@ body {
 	/*vertical-align: middle;*/
  	text-align: center;
  	}
+
+.container .cols .col-1asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-2asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-3asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-4asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-5asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-6asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-7asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-8asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-9asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-10asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-11asis {
+         background: #D8D8D8;
+        }
+.container .cols .col-12asis {
+         background: #D8D8D8;
+        }
+
 
 .container .cols.col-1 { height: 60px; width: 8.333333333333334%;}
 .container .cols.col-1full { width: 8.333333333333334%;}
@@ -94,82 +132,118 @@ body {
 	}
 
 @media screen and (max-width: 400px) {
+	.container {
+        width: 100%;
+        margin: 0 auto;
+        background: #4B0082;
+        }
+
 	h1{color : blue;}
 
 	.container .cols.col-1 {height: 60px; width: 100%;}
         .container .cols.col-1full {width: 100%;}
 	.container .cols.col-1resize {width: 100%;}
+	.container .cols.col-1asis {width: 33%;}
 	.container .cols.col-2 {height: 60px; width: 100%;}
         .container .cols.col-2full {width: 100%;}
 	.container .cols.col-2resize {width: 100%;}
+	.container .cols.col-2asis {width: 33%;}
 	.container .cols.col-3 {height: 60px; width: 100%;}
         .container .cols.col-3full {width: 100%;}
 	.container .cols.col-3resize {width: 100%;}
+	.container .cols.col-3asis {width: 33%;}
 	.container .cols.col-4 {height: 60px; width: 100%;}
         .container .cols.col-4full {width: 100%;}
 	.container .cols.col-4resize {width: 100%;}
+	.container .cols.col-4asis {width: 33%;}
 	.container .cols.col-5 {height: 60px; width: 100%;}
         .container .cols.col-5full {width: 100%;}
 	.container .cols.col-5resize {width: 100%;}
+	.container .cols.col-5asis {width: 33%;}
 	.container .cols.col-6 {height: 60px; width: 100%;}
         .container .cols.col-6full {width: 100%;}
 	.container .cols.col-6resize {width: 100%;}
+	.container .cols.col-6asis {width: 33%;}
 	.container .cols.col-7 {height: 60px; width: 100%;}
         .container .cols.col-7full {width: 100%;}
 	.container .cols.col-7resize {width: 100%;}
+	.container .cols.col-7asis {width: 33%;}
 	.container .cols.col-8 {height: 60px; width: 100%;}
         .container .cols.col-8full {width: 100%;}
 	.container .cols.col-8resize {width: 100%;}
+	.container .cols.col-8asis {width: 33%;}
 	.container .cols.col-9 {height: 60px; width: 100%;}
         .container .cols.col-9full {width: 100%;}
 	.container .cols.col-9resize {width: 100%;}
+	.container .cols.col-9asis {width: 33%;}
 	.container .cols.col-10 {height: 60px; width: 100%;}
         .container .cols.col-10full {width: 100%;}
 	.container .cols.col-10resize {width: 100%;}
+	.container .cols.col-10asis {width: 33%;}
 	.container .cols.col-11 {height: 60px; width: 100%;}
         .container .cols.col-11full {width: 100%;}
 	.container .cols.col-11resize {width: 100%;}
+	.container .cols.col-11asis {width: 33%;}
 	.container .cols.col-12 {height: 60px; width: 100%;}
 	.container .cols.col-12full {width: 100%;}
 	.container .cols.col-12resize {width: 100%;}
+	.container .cols.col-12asis {width: 33%;}
 	}
 @media screen and (min-width: 401px) and (max-width: 700px)  {
+	.container {
+        width: 100%;
+        margin: 0 auto;
+        background: #4B0082;
+        }
+
         h1{color : blue;}
 
         .container .cols.col-1 {height: 60px; width: 50%;}
         .container .cols.col-1full {width: 100%;}
         .container .cols.col-1resize {width: 50%;}
+	.container .cols.col-1asis {width: 33%;}
 	.container .cols.col-2 {height: 60px; width: 50%;}
         .container .cols.col-2full {width: 100%;}
 	.container .cols.col-2resize {width: 50%;}
+	.container .cols.col-2asis {width: 33%;}
         .container .cols.col-3 {height: 60px; width: 50%;}
         .container .cols.col-3full {width: 100%;}
         .container .cols.col-3resize {width: 50%;}
+	.container .cols.col-3asis {width: 33%;}
 	.container .cols.col-4 {height: 60px; width: 50%;}
         .container .cols.col-4full {width: 100%;}
         .container .cols.col-4resize {width: 50%;}
+	.container .cols.col-4asis {width: 33%;}
 	.container .cols.col-5 {height: 60px; width: 50%;}
         .container .cols.col-5full {width: 100%;}
         .container .cols.col-5resize {width: 50%;}
+	.container .cols.col-5asis {width: 33%;}
 	.container .cols.col-6 {height: 60px; width: 50%;}
         .container .cols.col-6full {width: 100%;}
         .container .cols.col-6resize {width: 50%;}
+	.container .cols.col-6asis {width: 33%;}
 	.container .cols.col-7 {height: 60px; width: 50%;}
         .container .cols.col-7full {width: 100%;}
         .container .cols.col-7resize {width: 50%;}
+	.container .cols.col-7asis {width: 33%;}
 	.container .cols.col-8 {height: 60px; width: 50%;}
         .container .cols.col-8full {width: 100%;}
         .container .cols.col-8resize {width: 50%;}
+	.container .cols.col-8asis {width: 33%;}
 	.container .cols.col-9 {height: 60px; width: 50%;}
         .container .cols.col-9full {width: 100%;}
         .container .cols.col-9resize {width: 50%;}
+	.container .cols.col-9asis {width: 33%;}
 	.container .cols.col-10 {height: 60px; width: 50%;}
         .container .cols.col-10full {width: 100%;}
         .container .cols.col-10resize {width: 50%;}
+	.container .cols.col-10asis {width: 33%;}
 	.container .cols.col-11 {height: 60px; width: 50%;}
         .container .cols.col-11full {width: 100%;}
         .container .cols.col-11resize {width: 50%;}
+	.container .cols.col-11asis {width: 33%;}
 	.container .cols.col-12 {height: 60px; width: 50%;}
 	.container .cols.col-12full {width: 100%;}
         .container .cols.col-12resize {width: 50%;}
+	.container .cols.col-12asis {width: 33%;}
 	}

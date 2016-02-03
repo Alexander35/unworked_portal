@@ -27,5 +27,8 @@ route(<<"favicon.ico">>) -> static_file;
 route(<<"static/spa/spa.htm">>)   -> login;
 route(<<"static/spa/index.htm">>) -> index;
 route(<<"find_port_via_mac">>) -> find_port_via_mac;
+route(<<"main_page">>) -> main_page;
+route(<<"help">>) -> help;
 route(<<"test">>)->login;
+route(<<"Nailya">>)->n;
 route(_) -> login1.
